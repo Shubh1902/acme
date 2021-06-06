@@ -1,77 +1,123 @@
 import { Box, Container, TextField } from '@material-ui/core';
-import React from 'react';
+import { Autocomplete } from '@material-ui/lab';
+import axios from 'axios';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import InfiniteTable, {
+  TableColumnsInterface,
+  TableRowsInterface,
+} from 'src/components/InfiniteTable';
 import Navbar from 'src/components/Navbar';
-import TableComponent from 'src/components/Table';
-const testObject = {
-  columns: [
-    {
-      id: '1',
-      label: 'Name',
-    },
-    {
-      id: '2',
-      label: 'Age',
-    },
-    {
-      id: '3',
-      label: 'Caste',
-    },
-    {
-      id: '4',
-      label: 'Sex',
-    },
-    {
-      id: '5',
-      label: 'Country',
-    },
-  ],
-  rows: [
-    {
-      id: '1',
-      name: 'Shubhanshu',
-      age: 26,
-      caste: 'None',
-    },
-    {
-      id: '2',
-      name: 'Shanku',
-      age: 27,
-      caste: 'None',
-    },
-    {
-      id: '3',
-      name: 'Shubhanshu',
-      age: 26,
-      caste: 'None',
-    },
-    {
-      id: '4',
-      name: 'Shanku',
-      age: 27,
-      caste: 'None',
-    },
-    {
-      id: '5',
-      name: 'Shubhanshu',
-      age: 26,
-    },
-    {
-      id: '6',
-      name: 'Shanku',
-      age: 27,
-    },
-  ],
-};
+import { FILTER_OPTIONS } from 'src/modules/Home/constants';
+import { createData } from 'src/modules/Home/helper';
+import FuzzySearch from 'fuzzy-search';
+
+function fetchData(offset: number) {
+  return axios
+    .get(`https://jsonplaceholder.typicode.com/albums/${offset}/photos`)
+    .then((res) => res.data)
+    .catch((err) => console.log(err));
+}
+
+export interface DataResponse {
+  albumId: number;
+  id: number;
+  thumbnailUrl: string;
+  title: string;
+  url: string;
+}
 const Home = () => {
+  const [offset, setOffset] = useState<number>(1);
+  const [originalData, setOriginalData] = useState<DataResponse[]>([]);
+  const [formattedData, setFormattedData] = useState<{
+    rows: TableRowsInterface[];
+    columns: TableColumnsInterface[];
+  }>({
+    rows: [],
+    columns: [],
+  });
+  const [searchString, setSearchString] = useState<string>('');
+  const [filter, setFilter] =
+    useState<null | { id: string; name: string }>(null);
+  const loadData = () => {
+    fetchData(offset)
+      .then((res) => handleResponse(res))
+      .catch((e) => console.log(e));
+  };
+
+  useEffect(()=>{
+
+  },[originalData])
+
+  const searchData = (searchString: string) => {
+    if(!searchString){
+
+    }
+    const searcher = new FuzzySearch(originalData, ['title'], {
+      caseSensitive: false,
+    });
+    const result = searcher.search(searchString);
+    console.log(result);
+  };
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newString = event.target.value;
+    setSearchString(newString);
+    searchData(newString);
+  };
+  const changeFilter = (value: { id: string; name: string } | null) => {
+    setFilter(value);
+  };
+  const handleResponse = (res: DataResponse[]) => {
+    setOriginalData((prev) => prev.concat(res));
+    setFormattedData((prev) => {
+      const formattedData = createData(res);
+      return {
+        columns: prev.columns.length ? prev.columns : formattedData.columns,
+        rows: prev.rows.concat(formattedData.rows),
+      };
+    });
+    setOffset((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   return (
     <Container className="container">
       <Navbar />
-      <TextField id="search" label="Search Products" fullWidth />
-      <TableComponent
-        rows={testObject.rows}
-        columns={testObject.columns}
+      <Box display="flex" flexDirection="row">
+        <Autocomplete
+          id="filter"
+          options={FILTER_OPTIONS}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => <TextField {...params} label="Filter" />}
+          value={filter}
+          onChange={(event, value) => {
+            changeFilter(value);
+          }}
+          placeholder={
+            filter ? `Enter ${filter.name}` : `Select Filter to search`
+          }
+        ></Autocomplete>
+        <TextField
+          id="search"
+          label={filter ? `Search` : `Select Filter to Search`}
+          fullWidth
+          onChange={handleChange}
+          value={searchString}
+          placeholder={
+            filter ? `Enter ${filter.name}` : `Select Filter to search`
+          }
+          disabled={!filter}
+        />
+      </Box>
+
+      <InfiniteTable
+        {...formattedData}
         onRowClick={() => {}}
         onSelectionChange={() => {}}
+        fetchData={loadData}
       />
     </Container>
   );
