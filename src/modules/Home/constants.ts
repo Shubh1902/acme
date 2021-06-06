@@ -7,7 +7,7 @@ export const FILTER_OPTIONS = [
 export const COLUMNS = [
   {
     id: '1',
-    label: 'Logo',
+    label: '',
   },
   {
     id: '2',

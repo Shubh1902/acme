@@ -3,15 +3,21 @@ import { TableRowsInterface } from 'src/components/InfiniteTable';
 
 export const createSelectionMap = (
   rows: TableRowsInterface[],
-  prev: { [key: string]: boolean },
-  global?: boolean
+  prev: { [key: string]: boolean }
 ) => {
+  let clone = _.cloneDeep(prev);
+  for (let key in clone) {
+    if (!rows.find((row) => row.id === key)) {
+      clone[key] = false;
+    }
+  }
   rows.forEach((item) => {
-    if (!prev.hasOwnProperty(item.id)) {
-      prev[item.id] = false;
+    if (!clone.hasOwnProperty(item.id)) {
+      clone[item.id] = false;
     }
   });
-  return prev;
+
+  return clone;
 };
 
 export const toggleAll = (prev: { [key: string]: boolean }) => {

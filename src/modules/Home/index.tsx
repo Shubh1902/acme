@@ -11,7 +11,9 @@ import InfiniteTable, {
 import Navbar from 'src/components/Navbar';
 import { COLUMNS, FILTER_OPTIONS } from 'src/modules/Home/constants';
 import { createRowData } from 'src/modules/Home/helper';
-
+import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import SearchIcon from '@material-ui/icons/Search';
 function fetchData(offset: number) {
   return axios
     .get(`https://jsonplaceholder.typicode.com/albums/${offset}/photos`)
@@ -107,13 +109,10 @@ const Home = () => {
           onChange={(event, value) => {
             changeFilter(value);
           }}
-          placeholder={
-            filter ? `Enter ${filter.name}` : `Select Filter to search`
-          }
         ></Autocomplete>
         <TextField
           id="search"
-          label={filter ? `Search` : `Select Filter to Search`}
+          label={' '}
           fullWidth
           onChange={handleSearchInputChange}
           value={searchString}
@@ -121,6 +120,15 @@ const Home = () => {
             filter ? `Enter ${filter.name}` : `Select Filter to search`
           }
           disabled={!filter}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton>
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
       </Box>
 
