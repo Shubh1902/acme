@@ -4,3 +4,13 @@ export const FILTER_OPTIONS = [
     name: 'Title',
   },
 ];
+export const COLUMNS = [
+  {
+    id: '1',
+    label: 'Logo',
+  },
+  {
+    id: '2',
+    label: 'Title',
+  },
+];

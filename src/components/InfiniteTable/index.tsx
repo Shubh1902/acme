@@ -17,11 +17,9 @@ const useStyles = makeStyles(() => ({
     boxShadow: 'none',
   },
   tableRow: {
-    borderBottom: '1px solid rgba(224, 224, 224, 1)',
     padding: '8px',
   },
   tableCell: {
-    borderBottom: 'none',
     padding: '8px',
   },
 }));
@@ -108,7 +106,7 @@ const InfiniteTable = (props: Props) => {
       }));
     }
   };
- 
+
   return (
     <InfiniteScroll
       next={props.fetchData}

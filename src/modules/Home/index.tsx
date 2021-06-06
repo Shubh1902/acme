@@ -1,15 +1,16 @@
 import { Box, Container, TextField } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import axios from 'axios';
+import FuzzySearch from 'fuzzy-search';
+import _ from 'lodash';
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import InfiniteTable, {
   TableColumnsInterface,
   TableRowsInterface,
 } from 'src/components/InfiniteTable';
 import Navbar from 'src/components/Navbar';
-import { FILTER_OPTIONS } from 'src/modules/Home/constants';
-import { createData } from 'src/modules/Home/helper';
-import FuzzySearch from 'fuzzy-search';
+import { COLUMNS, FILTER_OPTIONS } from 'src/modules/Home/constants';
+import { createRowData } from 'src/modules/Home/helper';
 
 function fetchData(offset: number) {
   return axios
@@ -33,49 +34,41 @@ const Home = () => {
     columns: TableColumnsInterface[];
   }>({
     rows: [],
-    columns: [],
+    columns: COLUMNS,
+  });
+  const [filteredData, setFilteredData] = useState<{
+    rows: TableRowsInterface[];
+    columns: TableColumnsInterface[];
+  }>({
+    rows: [],
+    columns: COLUMNS,
   });
   const [searchString, setSearchString] = useState<string>('');
   const [filter, setFilter] =
     useState<null | { id: string; name: string }>(null);
+
   const loadData = () => {
     fetchData(offset)
       .then((res) => handleResponse(res))
       .catch((e) => console.log(e));
   };
 
-  useEffect(()=>{
-
-  },[originalData])
-
-  const searchData = (searchString: string) => {
-    if(!searchString){
-
-    }
-    const searcher = new FuzzySearch(originalData, ['title'], {
-      caseSensitive: false,
-    });
-    const result = searcher.search(searchString);
-    console.log(result);
-  };
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const newString = event.target.value;
-    setSearchString(newString);
-    searchData(newString);
+  const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.target.value;
+    setSearchString(input);
   };
   const changeFilter = (value: { id: string; name: string } | null) => {
     setFilter(value);
+    if (!value) {
+      setSearchString('');
+    }
   };
   const handleResponse = (res: DataResponse[]) => {
     setOriginalData((prev) => prev.concat(res));
-    setFormattedData((prev) => {
-      const formattedData = createData(res);
-      return {
-        columns: prev.columns.length ? prev.columns : formattedData.columns,
-        rows: prev.rows.concat(formattedData.rows),
-      };
-    });
+    setFormattedData((prev) => ({
+      ...prev,
+      rows: prev.rows.concat(createRowData(res)),
+    }));
     setOffset((prev) => prev + 1);
   };
 
@@ -83,8 +76,26 @@ const Home = () => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (!searchString) {
+      setFilteredData(formattedData);
+    } else {
+      debouncedSearch(searchString);
+    }
+  }, [searchString, formattedData]);
+
+  const search = (searchString: string) => {
+    const searcher = new FuzzySearch(formattedData.rows, ['title'], {
+      caseSensitive: false,
+    });
+    setFilteredData({
+      columns: COLUMNS,
+      rows: searcher.search(searchString),
+    });
+  };
+  const debouncedSearch = _.debounce(search, 400);
   return (
-    <Container className="container">
+    <Container disableGutters>
       <Navbar />
       <Box display="flex" flexDirection="row">
         <Autocomplete
@@ -104,7 +115,7 @@ const Home = () => {
           id="search"
           label={filter ? `Search` : `Select Filter to Search`}
           fullWidth
-          onChange={handleChange}
+          onChange={handleSearchInputChange}
           value={searchString}
           placeholder={
             filter ? `Enter ${filter.name}` : `Select Filter to search`
@@ -114,7 +125,7 @@ const Home = () => {
       </Box>
 
       <InfiniteTable
-        {...formattedData}
+        {...filteredData}
         onRowClick={() => {}}
         onSelectionChange={() => {}}
         fetchData={loadData}

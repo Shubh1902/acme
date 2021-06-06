@@ -1,44 +1,24 @@
+import { Box } from '@material-ui/core';
+import React from 'react';
 import {
-  TableColumnsInterface,
-  TableRowsInterface,
+  TableRowsInterface
 } from 'src/components/InfiniteTable';
 import { DataResponse } from 'src/modules/Home';
 
-export const createData = (
-  data: DataResponse[]
-): {
-  rows: TableRowsInterface[];
-  columns: TableColumnsInterface[];
-} => {
-  return {
-    rows: createRowData(data),
-    columns: createColumnData(data),
-  };
-};
-
-const createRowData = (data: DataResponse[]): TableRowsInterface[] => {
+export const createRowData = (data: DataResponse[]): TableRowsInterface[] => {
   return data.map((entry) => ({
     id: entry.id.toString(),
-    title: (
-      <>
+    logo: (
+      <Box display="flex" alignItems="center">
         <img
           src={entry.thumbnailUrl}
           style={{
-            height: '20px',
-            width: '20px',
+            height: '30px',
+            width: '30px',
           }}
         ></img>
-        <span>{entry.title}</span>
-      </>
+      </Box>
     ),
+    title: entry.title,
   }));
-};
-
-const createColumnData = (data: DataResponse[]): TableColumnsInterface[] => {
-  return [
-    {
-      id: '1',
-      label: 'Title',
-    },
-  ];
 };
