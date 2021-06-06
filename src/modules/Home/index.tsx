@@ -14,6 +14,7 @@ import { createRowData } from 'src/modules/Home/helper';
 import IconButton from '@material-ui/core/IconButton';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import SearchIcon from '@material-ui/icons/Search';
+import 'src/modules/Home/style.css';
 function fetchData(offset: number) {
   return axios
     .get(`https://jsonplaceholder.typicode.com/albums/${offset}/photos`)
@@ -95,7 +96,7 @@ const Home = () => {
       rows: searcher.search(searchString),
     });
   };
-  const debouncedSearch = _.debounce(search, 400);
+  const debouncedSearch = _.debounce(search, 400); //debounce search string to improve performance
   return (
     <Container disableGutters>
       <Navbar />
@@ -134,8 +135,12 @@ const Home = () => {
 
       <InfiniteTable
         {...filteredData}
-        onRowClick={() => {}}
-        onSelectionChange={() => {}}
+        onRowClick={({ ...data }) => {
+          console.log(data);
+        }}
+        onSelectionChange={({ ...data }) => {
+          console.log(data);
+        }}
         fetchData={loadData}
       />
     </Container>

@@ -1,4 +1,4 @@
-import { Checkbox, makeStyles } from '@material-ui/core';
+import { Checkbox } from '@material-ui/core';
 import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -6,23 +6,14 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import {
   createSelectionMap,
-  toggleAll,
+  toggleAll
 } from 'src/components/InfiniteTable/helper';
-const useStyles = makeStyles(() => ({
-  root: {
-    boxShadow: 'none',
-  },
-  tableRow: {
-    padding: '8px',
-  },
-  tableCell: {
-    padding: '8px',
-  },
-}));
+import useStyles from 'src/components/InfiniteTable/styles';
+import TableRowData from 'src/components/InfiniteTable/TableRow';
 
 export interface TableColumnsInterface {
   id: string;
@@ -42,49 +33,13 @@ interface Props {
   onSelectionChange: Function;
   fetchData: any;
 }
-interface DataRowInterface {
-  id: string;
-  [key: string]: React.ReactNode | string | number;
-  handleCheckBoxClick: Function;
-  onClick: Function;
-  checked: boolean;
-}
-const TableRowData = (props: DataRowInterface) => {
-  const { id, handleCheckBoxClick, checked, onClick, ...fields } = props;
-  const classes = useStyles();
-  const [selected, setSelected] = useState(false);
-  useEffect(() => {
-    if (checked !== undefined) {
-      setSelected(checked);
-    }
-  }, [checked]);
-  const onChangeChecked = (id: string) => {
-    setSelected(!selected);
-    handleCheckBoxClick(id);
-  };
-  return (
-    <TableRow className={classes.tableRow}>
-      <TableCell className={classes.tableCell}>
-        <Checkbox
-          onChange={() => {
-            onChangeChecked(id);
-          }}
-          checked={selected}
-        />
-      </TableCell>
-      {Object.keys(fields).map((key) => (
-        <TableCell className={classes.tableCell} key={key}>
-          {fields[key]}
-        </TableCell>
-      ))}
-    </TableRow>
-  );
-};
+
 const InfiniteTable = (props: Props) => {
   const classes = useStyles();
   const [selectionMap, setSelectionMap] = useState<{ [key: string]: boolean }>({
     all: false,
   });
+  const selectionRef = useRef(false);
 
   useEffect(() => {
     if (props.rows.length) {
@@ -105,7 +60,14 @@ const InfiniteTable = (props: Props) => {
         [id]: !prev[id],
       }));
     }
+    selectionRef.current = true;
   };
+
+  useEffect(() => {
+    if (selectionRef.current) {
+      props.onSelectionChange(selectionMap);
+    }
+  }, [selectionMap]);
 
   return (
     <InfiniteScroll
@@ -118,7 +80,12 @@ const InfiniteTable = (props: Props) => {
         <Table stickyHeader>
           <TableHead>
             <TableRow className={classes.tableRow}>
-              <TableCell className={classes.tableCell}>
+              <TableCell
+                className={classes.tableHeadCell}
+                style={{
+                  backgroundColor: '#f0f8ff',
+                }}
+              >
                 <Checkbox
                   onChange={() => {
                     handleCheckBoxClick('all');
@@ -127,7 +94,14 @@ const InfiniteTable = (props: Props) => {
                 />
               </TableCell>
               {props.columns.map((col) => (
-                <TableCell key={col.id} className={classes.tableCell}>
+                <TableCell
+                  key={col.id}
+                  className={classes.tableHeadCell}
+                  style={{
+                    width: col.width ? col.width : 'unset',
+                    backgroundColor: '#f0f8ff',
+                  }}
+                >
                   <h4>{col.label}</h4>
                 </TableCell>
               ))}
@@ -138,9 +112,7 @@ const InfiniteTable = (props: Props) => {
               <TableRowData
                 {...row}
                 key={row.id}
-                onClick={() => {
-                  props.onRowClick(row, index);
-                }}
+                onClick={props.onRowClick}
                 handleCheckBoxClick={handleCheckBoxClick}
                 checked={selectionMap[row.id]}
               ></TableRowData>
