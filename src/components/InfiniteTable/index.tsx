@@ -32,6 +32,7 @@ interface Props {
   onRowClick: Function;
   onSelectionChange: Function;
   fetchData: any;
+  hasMore:boolean
 }
 
 const InfiniteTable = (props: Props) => {
@@ -72,7 +73,7 @@ const InfiniteTable = (props: Props) => {
   return (
     <InfiniteScroll
       next={props.fetchData}
-      hasMore={true}
+      hasMore={props.hasMore}
       dataLength={props.rows.length}
       loader={<h4>Loading...</h4>}
     >
