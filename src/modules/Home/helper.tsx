@@ -1,8 +1,7 @@
 import { Box } from '@material-ui/core';
+import _ from 'lodash';
 import React from 'react';
-import {
-  TableRowsInterface
-} from 'src/components/InfiniteTable';
+import { TableRowsInterface } from 'src/components/InfiniteTable';
 import { DataResponse } from 'src/modules/Home';
 
 export const createRowData = (data: DataResponse[]): TableRowsInterface[] => {
@@ -21,4 +20,8 @@ export const createRowData = (data: DataResponse[]): TableRowsInterface[] => {
     ),
     title: entry.title,
   }));
+};
+
+export const createDebouceFn = (fn: any, wait: number) => {
+  return _.debounce(fn, wait);
 };
